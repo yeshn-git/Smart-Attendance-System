@@ -7,7 +7,7 @@ from mark_attendance import mark_present
 # --- CONFIG ---
 ENCODING_FILE = "encodings.pickle"
 
-def start_recognition():
+def start_recognition(subject_name):
     print("--- LOADING BRAIN ---")
     # 1. Load the known faces
     try:
@@ -51,7 +51,7 @@ def start_recognition():
                     name = known_names[best_match_index]
                     
                     # If we recognize them, mark attendance!
-                    mark_present(name) 
+                    mark_present(name, subject_name) 
 
             # 5. Draw a box around the face
             top, right, bottom, left = face_location

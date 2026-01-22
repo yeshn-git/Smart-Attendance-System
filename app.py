@@ -1,78 +1,66 @@
 import tkinter as tk
-from tkinter import messagebox
-from tkinter import font as tkfont
-import os
+from tkinter import ttk, messagebox
+import main
+import generate_report  
 
-# --- IMPORT YOUR FUNCTIONS ---
-# This connects the buttons to your existing code
-try:
-    from add_student import add_student
-    from train_faces import find_encodings
-    from main import start_recognition
-    from generate_report import export_attendance
-except ImportError as e:
-    print(f"❌ Error importing modules: {e}")
-    print("Make sure all your .py files are in the same folder!")
-
-# --- GUI LOGIC ---
-def run_register():
-    # We open the terminal for registration because it needs text input (Name/ID)
-    os.system('start cmd /k "python add_student.py"') 
-
-def run_train():
+def start_attendance():
+    selected_subject = subject_combobox.get()
+    if selected_subject == "Select Subject":
+        messagebox.showwarning("Warning", "Please select a subject first!")
+        return
+    
     try:
-        find_encodings()
-        messagebox.showinfo("Success", "✅ AI Training Complete!")
+        # Start the camera with the selected subject
+        main.start_recognition(selected_subject)
     except Exception as e:
-        messagebox.showerror("Error", f"Training failed: {e}")
+        messagebox.showerror("Error", f"Camera crashed: {e}")
 
-def run_attendance():
-    try:
-        start_recognition()
-    except Exception as e:
-        messagebox.showerror("Error", f"Camera failed: {e}")
+def generate_excel():
+    # 1. Get the subject currently showing in the dropdown
+    current_subject = subject_combobox.get()
+    
+    # 2. Call the report function AND PASS THE SUBJECT
+    result = generate_report.export_attendance(current_subject)
+    
+    # 3. Show the result
+    if "Error" in result:
+        messagebox.showerror("Report Error", result)
+    else:
+        messagebox.showinfo("Success", result)
 
-def run_export():
-    try:
-        export_attendance()
-        messagebox.showinfo("Success", "✅ Excel Report Generated!")
-    except Exception as e:
-        messagebox.showerror("Error", f"Export failed: {e}")
-
-# --- SETUP WINDOW ---
+# --- GUI SETUP ---
 root = tk.Tk()
-root.title("Smart Attendance System")
-root.geometry("400x500")
-root.configure(bg="#f0f0f0")
+root.title("Smart Attendance System - Enterprise Edition")
+root.geometry("500x400") # Made it slightly taller for the new button
+root.configure(bg="#2c3e50")
 
-# Custom Font
-title_font = tkfont.Font(family="Helvetica", size=18, weight="bold")
-btn_font = tkfont.Font(family="Helvetica", size=12)
+# Header
+tk.Label(root, text="📷 Smart Attendance Dashboard", 
+         font=("Helvetica", 18, "bold"), bg="#2c3e50", fg="white").pack(pady=20)
 
-# Title
-header = tk.Label(root, text="Smart Attendance\nDashboard", font=title_font, bg="#f0f0f0", fg="#333")
-header.pack(pady=30)
+# Dropdown Section
+frame = tk.Frame(root, bg="#2c3e50")
+frame.pack(pady=10)
+tk.Label(frame, text="Current Session:", font=("Arial", 12), 
+         bg="#2c3e50", fg="white").pack(side=tk.LEFT, padx=10)
 
-# Buttons (Styled)
-def create_btn(text, command, color):
-    return tk.Button(root, text=text, command=command, font=btn_font, 
-                     bg=color, fg="white", width=20, height=2, bd=0, cursor="hand2")
+subjects = ["Maths_101", "Physics_202", "CS_DataStructures", "CS_DBMS"]
+subject_combobox = ttk.Combobox(frame, values=subjects, state="readonly", width=20)
+subject_combobox.set("Select Subject")
+subject_combobox.pack(side=tk.LEFT)
 
-btn_register = create_btn("👤  Register New Student", run_register, "#3498db") # Blue
-btn_register.pack(pady=10)
+# Start Button (Green)
+tk.Button(root, text="START ATTENDANCE", command=start_attendance,
+          font=("Arial", 12, "bold"), bg="#27ae60", fg="white",
+          width=25, height=2).pack(pady=20)
 
-btn_train = create_btn("🧠  Train AI Model", run_train, "#9b59b6") # Purple
-btn_train.pack(pady=10)
-
-btn_start = create_btn("📷  Start Attendance", run_attendance, "#2ecc71") # Green
-btn_start.pack(pady=10)
-
-btn_export = create_btn("📊  Export Report", run_export, "#e67e22") # Orange
-btn_export.pack(pady=10)
+# Export Button (Orange) - THE NEW ADDITION
+tk.Button(root, text="📄 EXPORT EXCEL REPORT", command=generate_excel,
+          font=("Arial", 12, "bold"), bg="#e67e22", fg="white",
+          width=25, height=2).pack(pady=5)
 
 # Footer
-footer = tk.Label(root, text="System Ready", font=("Arial", 10), bg="#f0f0f0", fg="#777")
-footer.pack(side="bottom", pady=20)
+tk.Label(root, text="System Ready", font=("Arial", 10), 
+         bg="#2c3e50", fg="#bdc3c7").pack(side=tk.BOTTOM, pady=10)
 
-# Start the App
 root.mainloop()

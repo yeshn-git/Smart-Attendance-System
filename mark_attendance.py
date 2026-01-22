@@ -2,9 +2,13 @@ import mysql.connector
 from datetime import datetime
 
 # --- CONFIG ---
-DB_PASSWORD = "YOUR_DB_PASSWORD"  
+DB_PASSWORD = "YOUR_DB_PASSWORD"  # <--- Make sure this is correct
 
-def mark_present(roll_no):
+def mark_present(name, subject): # <--- Added 'subject' parameter
+    now = datetime.now()
+    current_date = now.strftime("%Y-%m-%d")
+    current_time = now.strftime("%H:%M:%S")
+
     try:
         conn = mysql.connector.connect(
             host="localhost",
@@ -14,46 +18,41 @@ def mark_present(roll_no):
         )
         cursor = conn.cursor()
 
-        # 1. Finds the Student ID from the Roll Number
-        cursor.execute("SELECT student_id, name FROM students WHERE roll_number = %s", (roll_no,))
+        # 1. Find the Student ID
+        # We search by roll_number because your files are named 'CSE-101.jpg'
+        cursor.execute("SELECT student_id, roll_number FROM students WHERE roll_number = %s", (name,))
         student = cursor.fetchone()
 
-        if not student:
-            print(f"❌ Error: No student found with Roll No {roll_no}")
-            return
+        if student:
+            student_id = student[0]
+            roll_number = student[1]
 
-        student_id = student[0]
-        student_name = student[1]
+            # 2. CHECK DUPLICATE (Updated Logic)
+            # We now check if they are present for THIS SPECIFIC SUBJECT on this day.
+            check_query = """
+                SELECT * FROM attendance_logs 
+                WHERE student_id = %s AND DATE(check_in_time) = %s AND subject = %s
+            """
+            cursor.execute(check_query, (student_id, current_date, subject))
+            existing_log = cursor.fetchone()
 
-        # 2. Checks if already marked present TODAY
-        # We check for any record where student_id matches AND date is today
-        query = """
-            SELECT * FROM attendance_logs 
-            WHERE student_id = %s AND DATE(check_in_time) = CURDATE()
-        """
-        cursor.execute(query, (student_id,))
-        existing_log = cursor.fetchone()
+            if existing_log:
+                pass # Already marked for this subject
+            else:
+                # 3. INSERT LOG (With Subject)
+                insert_query = """
+                    INSERT INTO attendance_logs (student_id, check_in_time, status, subject) 
+                    VALUES (%s, %s, %s, %s)
+                """
+                cursor.execute(insert_query, (student_id, now, 'Present', subject))
+                conn.commit()
+                print(f"✅ {name} marked PRESENT for {subject} at {current_time}")
 
-        if existing_log:
-            #print(f"⚠️ {student_name} is ALREADY marked present today.")
-            pass
         else:
-            # 3. Insert the log
-            insert_query = "INSERT INTO attendance_logs (student_id, status) VALUES (%s, 'Present')"
-            cursor.execute(insert_query, (student_id,))
-            conn.commit()
-            
-            # Get current time for display
-            now = datetime.now().strftime("%H:%M:%S")
-            print(f"✅ Success: {student_name} marked PRESENT at {now}")
-
-        cursor.close()
-        conn.close()
+            print(f"❌ Error: Student '{name}' not found in database.")
 
     except mysql.connector.Error as err:
         print(f"❌ Database Error: {err}")
-
-# --- TEST AREA ---
-if __name__ == "__main__":
-    test_roll = input("Enter Roll No to mark present (e.g., CSE-101): ")
-    mark_present(test_roll)
+    finally:
+        if 'conn' in locals() and conn.is_connected():
+            conn.close()

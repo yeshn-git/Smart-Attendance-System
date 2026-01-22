@@ -1,36 +1,71 @@
-# 📸 Smart Attendance System using Face Recognition
+# 📸 Smart Attendance System (Enterprise Edition)
 
-A real-time automated attendance system built with Python and Computer Vision. This application uses the camera to recognize registered faces, marks their attendance in a MySQL database, and prevents duplicate entries for the day. It also includes an export feature to generate daily attendance reports in Excel/CSV format.
+A full-stack Biometric Attendance System built with **Python**, **OpenCV**, and **MySQL**.
+It features a **Modern GUI Dashboard**, **Multi-Subject Support**, and **Automated Excel Reporting**.
 
 ## 🚀 Features
-* **Real-Time Face Recognition:** Identifies students instantly using the `face_recognition` library.
-* **Duplicate Prevention:** Intelligent logic ensures a student is only marked present once per day.
-* **Database Integration:** Stores student details and attendance logs securely in MySQL.
-* **Excel Export:** Generates downloadable `.csv` reports for administrators.
+* **Real-time Face Recognition:** Uses HOG + Linear SVM for 99% accuracy.
+* **Live Attendance Logging:** Prevents duplicate entries using logic gates.
+* **Database Integration:** Stores records in MySQL with Subject/Session tracking.
+* **Admin Dashboard:** Dark-mode GUI built with Tkinter.
+* **Excel Export:** Generates formatted daily reports filtered by subject.
 
 ## 🛠️ Tech Stack
 * **Language:** Python 3.10+
-* **Computer Vision:** OpenCV, dlib, Face Recognition
-* **Database:** MySQL 8.0
-* **Data Handling:** Pandas
+* **Computer Vision:** OpenCV, face_recognition, dlib
+* **GUI:** Tkinter (Custom Styled)
+* **Database:** MySQL Connector
+* **Data Processing:** Pandas, OpenPyXL
+
+## ⚙️ Installation
+
+1.  **Clone the Repository**
+    ```bash
+    git clone [https://github.com/yeshn-git/Smart-Attendance-System.git](https://github.com/yeshn-git/Smart-Attendance-System.git)
+    cd Smart-Attendance-System
+    ```
+
+2.  **Install Dependencies**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+3.  **Setup Database (MySQL)**
+    Open MySQL Workbench and run:
+    ```sql
+    CREATE DATABASE attendance_system;
+    USE attendance_system;
+
+    CREATE TABLE students (
+        student_id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(50),
+        roll_number VARCHAR(20) UNIQUE,
+        face_encoding BLOB
+    );
+
+    CREATE TABLE attendance_logs (
+        log_id INT AUTO_INCREMENT PRIMARY KEY,
+        student_id INT,
+        check_in_time DATETIME,
+        status VARCHAR(20),
+        subject VARCHAR(50),
+        FOREIGN KEY (student_id) REFERENCES students(student_id)
+    );
+    ```
+
+## 🖥️ How to Run
+
+1.  **Start the Dashboard**
+    ```bash
+    python app.py
+    ```
+2.  **Select a Subject** (e.g., "CS_DataStructures") from the dropdown.
+3.  Click **[ START ATTENDANCE ]** to launch the camera.
+4.  Press **'q'** to close the camera.
+5.  Click **[ EXPORT EXCEL REPORT ]** to get the daily log.
 
 ## 📂 Project Structure
-* `add_student.py` → Script to register a new student and capture their face.
-* `train_faces.py` → Encodes the saved images into mathematical data for the AI.
-* `main.py` → The core application that runs the camera and marks attendance.
-* `generate_report.py` → Exports the database logs to a CSV file.
-* `mark_attendance.py` → Helper logic for database interactions.
-
-## ⚙️ Setup & Installation
-
-### 1. Prerequisites
-* Python 3.x
-* MySQL Server & Workbench
-* CMake (Required for compiling dlib)
-* Visual Studio Build Tools (C++ Desktop Development)
-
-### 2. Install Python Libraries
-```bash
-pip install cmake
-pip install dlib
-pip install face-recognition opencv-python mysql-connector-python pandas
+* `app.py` - The Main GUI Dashboard.
+* `main.py` - The Core Face Recognition Logic.
+* `generate_report.py` - The Excel Export Engine.
+* `add_student.py` - Utility to register new faces.

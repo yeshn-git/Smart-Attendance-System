@@ -51,7 +51,7 @@ def save_to_db(name, roll_no):
         conn = mysql.connector.connect(
             host="localhost",
             user="root",
-            password=DB_PASSWORD,
+            password="YOUR_DB_PASSWORD",
             database="attendance_system"
         )
         cursor = conn.cursor()
