@@ -1,0 +1,13 @@
+# Ignore python system files
+__pycache__/
+*.py[cod]
+
+# Ignore the student photos (Privacy)
+student_images/
+
+# Ignore local environment settings
+.vscode/
+.env
+
+# Ignore the compiled encoding file (Optional, but usually good to generate fresh)
+encodings.pickle
